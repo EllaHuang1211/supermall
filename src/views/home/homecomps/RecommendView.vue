@@ -32,7 +32,6 @@ export default {
     border-bottom: 8px solid rgb(240, 237, 237);
   }
   #home-recommend li {
-    list-style: none;
     width: 25%;
     font-size: 12px;
     text-align: center;

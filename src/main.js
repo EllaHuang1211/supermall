@@ -5,8 +5,8 @@ import router from './router/index'
 Vue.config.productionTip = false
 
 new Vue({
-  router,
   render: h => h(App),
+  router
 }).$mount('#app')
 
 document.title = "SuperMall"
