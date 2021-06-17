@@ -16,7 +16,7 @@ export default {
   // },
   props: {
     path: String,
-    actieColor: {
+    activeColor: {
       type: String,
       default: 'pink'
     }
@@ -26,7 +26,7 @@ export default {
       return this.$route.path == this.path
     },
     activeStyle(){
-      return this.isActive ? {color: this.actieColor} : {}
+      return this.isActive ? {color: this.activeColor} : {}
     }
   },
   methods: {

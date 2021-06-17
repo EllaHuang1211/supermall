@@ -3,11 +3,30 @@
     <nav-bar class="home-nav">
       <div slot="center">购物街</div>
     </nav-bar>
-    <home-swiper :banners="banners" class="home-banner"></home-swiper>
-    <recommend-view :recommends="recommends"></recommend-view>
-    <this-week-popular></this-week-popular>
-    <tab-control :tabTitles="tabTitles" class="tab-control" @itemClick="tabControlClick"></tab-control>
-    <goods-list :list="goodsList[goodsShowType].list"></goods-list>
+    <tab-control :tabTitles="tabTitles"
+      class="tab-control"
+      ref="tabControl1"
+      @itemClick="tabControlClick"
+      v-show="isTabControlFixed">
+    </tab-control>
+    <scroll class="content"
+     ref="scroll"
+     :probeType='probeType'
+     :pullUpLoad='pullUpLoad'
+     :tabControlOffSetTop='tabControlOffSetTop'
+     @scroll='backtop'
+     @pullingUp='loadMore'
+     @isTabControlFixed='isTabFixed'>
+      <home-swiper :banners="banners" class="home-banner" @swiperImgLoad='swiperImgLoad'></home-swiper>
+      <recommend-view :recommends="recommends"></recommend-view>
+      <this-week-popular></this-week-popular>
+      <tab-control :tabTitles="tabTitles"
+       class="tab-control"
+       @itemClick="tabControlClick"
+       ref="tabControl2"></tab-control>
+      <goods-list :list="goodsList[currentType].list"></goods-list>
+    </scroll>
+    <back-top @click.native="backTopClick" class="back-top-button" v-show="isShowBackTop"></back-top>
   </div>
 </template>
 
@@ -20,6 +39,8 @@ import RecommendView from './homecomps/RecommendView.vue'
 import ThisWeekPopular from './homecomps/ThisWeekPopular.vue'
 import TabControl from 'components/content/tabcontrol/TabControl.vue'
 import GoodsList from 'components/content/goodslist/GoodsList.vue'
+import Scroll from 'components/common/scroll/Scroll.vue'
+import BackTop from 'components/content/backtop/BackTop.vue'
 
 export default {
   name: 'Home',
@@ -33,16 +54,37 @@ export default {
         'new': {page: 0, list: []},
         'sell': {page: 0, list: []}
       },
-      goodsShowType: 'pop'
+      currentType: 'pop',
+      bs: null,
+      isShowBackTop: false,
+      probeType: 3,
+      pullUpLoad: true,
+      tabControlOffSetTop: 0,
+      isTabControlFixed: false
     }
+  },
+  created(){
+    // 网络请求相关
+    this.getHomeMultidata()
+    this.getHomeGoodsList('pop')
+    this.getHomeGoodsList('new')
+    this.getHomeGoodsList('sell')
+  },
+  mounted() {
+    const refresh = this.debounce(this.$refs.scroll.refresh, 50)
+    this.$bus.$on('itemImgLoad',() => {
+      refresh()
+    })
   },
   methods: {
     tabControlClick(index) {
       switch(index) {
-        case 0: this.goodsShowType = 'pop'; break;
-        case 1: this.goodsShowType = 'new'; break;
-        case 2: this.goodsShowType = 'sell'
+        case 0: this.currentType = 'pop'; break;
+        case 1: this.currentType = 'new'; break;
+        case 2: this.currentType = 'sell'
       }
+      this.$refs.tabControl1.currentIndex = index
+      this.$refs.tabControl2.currentIndex = index
     },
     getHomeMultidata() {
       getHomeMultidata().then(res => {
@@ -53,9 +95,38 @@ export default {
     getHomeGoodsList(type) {
       let page = this.goodsList[type].page + 1
       getHomeGoodsList(type, page).then(res => {
-      this.goodsList[type].list.push(...res.data.list)
-      console.log(this.goodsList[type].list)
-    })
+        this.goodsList[type].list.push(...res.data.list)
+        this.goodsList[type].page += 1
+        //每次请求完数据后要finishPullUp
+        this.$refs.scroll.finishPullUp()
+      })
+    },
+    backtop(bool) {
+      this.isShowBackTop = bool
+    },
+    backTopClick() {
+      this.$refs.scroll.scrollTo()
+    },
+    //防抖函数
+    debounce(func, delay) {
+      let timer = null
+      return function(...args) {
+        if(timer) {clearTimeout(timer)}
+        timer = setTimeout(() => {
+          // console.log('+++++++++')
+          func.apply(this, args)
+        }, delay)
+      }
+    },
+    loadMore() {
+      this.getHomeGoodsList(this.currentType)
+    },
+    swiperImgLoad() {
+      // console.log(this.$refs.tabControl2.$el.offsetTop)
+      this.tabControlOffSetTop = this.$refs.tabControl2.$el.offsetTop
+    },
+    isTabFixed(bool) {
+      this.isTabControlFixed = bool
     }
   },
   components: {
@@ -64,31 +135,38 @@ export default {
     RecommendView,
     ThisWeekPopular,
     TabControl,
-    GoodsList
-
-  },
-  created(){
-    // 网络请求相关
-    this.getHomeMultidata()
-    this.getHomeGoodsList('pop')
-    this.getHomeGoodsList('new')
-    this.getHomeGoodsList('sell')
-    
+    GoodsList,
+    Scroll,
+    BackTop
   }
 }
 </script>
 
-<style>
-  #home .home-nav {
+<style scoped>
+  #home {
+    height: 100vh;
+    position: relative;
+  }
+  .home-nav {
     background-color: var(--color-tint);
     color: #fff;
   }
-  #home .home-banner {
-    margin-top: 44px;
+  .tab-control {
+    position: relative;
+    z-index: 999;
   }
-  #home .tab-control {
-    margin-top: 10px;
-    position: sticky;
+  .content {
+    position: absolute;
     top: 44px;
+    bottom: 49px;
+    left: 0;
+    right: 0; 
+    overflow: hidden;
+  }
+  .back-top-button {
+    position: fixed;
+    right: 8px;
+    bottom: 50px;
+    z-index: 999;
   }
 </style>

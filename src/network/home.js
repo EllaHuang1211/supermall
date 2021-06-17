@@ -15,3 +15,4 @@ export function getHomeGoodsList(type, page) {
     }
   })
 }
+

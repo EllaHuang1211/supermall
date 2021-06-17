@@ -1,6 +1,6 @@
 <template>
-  <div class="goods-list-item">
-    <img :src="item.show.img" alt="">
+  <div class="goods-list-item" @click="goodsItemClick">
+    <img :src="item.show.img" alt="" @load="itemImgLoad">
     <div class="goods-info">
       <p class="title">{{item.title}}</p>
       <span class="price">{{item.price}}</span>
@@ -10,6 +10,7 @@
 </template>
 
 <script>
+
 export default {
   name: 'GoodsListItem',
   props: {
@@ -18,6 +19,14 @@ export default {
       default() {
         return {}
       }
+    }
+  },
+  methods: {
+    itemImgLoad() {
+      this.$bus.$emit('itemImgLoad')
+    },
+    goodsItemClick() {
+      this.$router.push('/detail/' + this.item.iid)
     }
   }
 }
@@ -51,5 +60,6 @@ export default {
     width: 14px;
     height: 14px;
     background: url('~assets/img/common/collect.svg') 0 0/14px 14px;
+    vertical-align: baseline;
   }
 </style>

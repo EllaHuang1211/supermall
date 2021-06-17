@@ -1,6 +1,8 @@
 <template>
-  <div id="home-this-week-popular">
-    <img src="~assets/img/home/recommend_bg.jpg" alt="">
+  <div class="home-this-week-popular">
+    <a href="http://act.mogujie.com/zzlx67">
+      <img src="~assets/img/home/recommend_bg.jpg" alt="">
+    </a>
   </div>
 </template>
 
@@ -11,7 +13,7 @@ export default {
 </script>
 
 <style>
-  #home-this-week-popular img {
+  .home-this-week-popular img {
     width: 100%;
   }
 </style>
