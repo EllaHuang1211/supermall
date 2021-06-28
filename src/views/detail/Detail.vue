@@ -1,20 +1,23 @@
 <template>
   <div class="detail">
-    <detail-nav-bar class="detail-nav-bar"></detail-nav-bar>
-    <scroll class="detail-scroll" ref="scroll">
+    <detail-nav-bar class="detail-nav-bar" ref="detailNavBar" @navItemClick='navItemClick'></detail-nav-bar>
+    <scroll class="detail-scroll" ref="scroll" @detailScroll='detailScroll' :probeType='probeType'>
       <detail-swiper :topImages='topImages'></detail-swiper>
       <detail-base-info :goods='goods'></detail-base-info>
       <detail-shop-info :shop='shopInfo'></detail-shop-info>  
-      <detail-goods-info :detailInfo='detailInfo' @imageLoad='imageLoad'></detail-goods-info>
-      <detail-param-info :paramInfo='paramInfo'></detail-param-info>
-      <detail-comment-info :commentInfo='commentInfo'></detail-comment-info>
-      <goods-list :list='recommendList'></goods-list>
+      <detail-goods-info :detailInfo='detailInfo' @detailImageLoad='detailImageLoad'></detail-goods-info>
+      <detail-param-info :paramInfo='paramInfo' ref="param"></detail-param-info>
+      <detail-comment-info :commentInfo='commentInfo' ref="comment"></detail-comment-info>
+      <goods-list :list='recommendList' ref="recommend"></goods-list>
     </scroll>
+    <detail-bottom-bar @addToCart='addToCart'></detail-bottom-bar>
+    <back-top @click.native="backTopClick" class="back-top-button" v-show="isShowBackTop"></back-top>
   </div>
 </template>
 
 <script>
 import {getDetailInfo, Goods, Shop, GoodsParam, getRecommendList} from 'network/detail.js'
+import {itemImgLoadMixin, backTopMixin} from 'common/mixin.js'
 
 import Scroll from 'components/common/scroll/Scroll.vue'
 
@@ -26,6 +29,8 @@ import DetailGoodsInfo from './detailcomps/DetailGoodsInfo.vue'
 import DetailParamInfo from './detailcomps/DetailParamInfo.vue'
 import DetailCommentInfo from './detailcomps/DetailCommentInfo.vue'
 import GoodsList from 'components/content/goodslist/GoodsList.vue'
+import DetailBottomBar from './detailcomps/DetailBottomBar.vue'
+import BackTop from 'components/content/backtop/BackTop.vue'
 
 export default {
   name: 'Detail',
@@ -38,23 +43,60 @@ export default {
     DetailGoodsInfo,
     DetailParamInfo,
     DetailCommentInfo,
-    GoodsList
+    GoodsList,
+    DetailBottomBar,
+    BackTop
   },
   data() {
     return {
       iid: null,
+      probeType: 3,
       topImages: [],
       goods: {},
       shopInfo: {},
       detailInfo: {},
       paramInfo: {},
       commentInfo: {},
-      recommendList: []
+      recommendList: [],
+      itemImgLoad: null,
+      moduleHeight: []
     }
   },
+  mixins: [itemImgLoadMixin, backTopMixin],
   methods: {
-    imageLoad() {
+    detailImageLoad() {
       this.$refs.scroll.refresh()
+      //确定不同模块的高度，详情图片加载完后才能获取
+      this.moduleHeight[0] = 0
+      this.moduleHeight[1] = this.$refs.param.$el.offsetTop
+      this.moduleHeight[2] = this.$refs.comment.$el.offsetTop
+      this.moduleHeight[3] = this.$refs.recommend.$el.offsetTop
+      // console.log(this.moduleHeight)
+    },
+    navItemClick(index) {
+      this.$refs.scroll.scrollTo(0, -this.moduleHeight[index], 200)
+      // console.log(this.moduleHeight[index])
+    },
+    //根据页面所处内容切换detailNavBar的样式
+    detailScroll(y) {
+      let length = this.moduleHeight.length
+      for(let i = length-1; i>=0; i--) {
+        if(-y >= this.moduleHeight[i]) {
+          this.$refs.detailNavBar.currentIndex = i
+          break
+        }
+      }
+      this.setIsShowBackTop(y)
+    },
+    addToCart() {
+      const addGood = {
+        iid: this.iid,
+        img: this.topImages[0],
+        title: this.goods.title,
+        desc: this.goods.desc,
+        price: this.goods.lowNowPrice
+      }
+      this.$store.dispatch('addToCart',addGood)
     }
   },
   created() {
@@ -81,10 +123,13 @@ export default {
     })
     getRecommendList().then(res => {
       //保存recommendList数据
-      console.log(res.data.list)
+      // console.log(res.data.list)
       this.recommendList = res.data.list
     })
-  }
+  },
+  destroyed() {
+    this.$bus.$off('itemImgLoad', this.itemImgLoad)
+  },
 }
 </script>
 
@@ -101,11 +146,18 @@ export default {
   background: #fff;
 }
 .detail-scroll {
-  height: calc(100% - 44px);
+  height: calc(100% - 44px - 58px);
+  position: relative;
   /* position: absolute;
   top: 44px;
   bottom: 0;
   left: 0;
   right: 0; */
 }
+.back-top-button {
+    position: fixed;
+    right: 8px;
+    bottom: 60px;
+    z-index: 999;
+  }
 </style>

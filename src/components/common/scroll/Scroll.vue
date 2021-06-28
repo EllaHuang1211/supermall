@@ -29,10 +29,6 @@ export default {
     pullUpLoad: {
       type: Boolean,
       default: false
-    },
-    tabControlOffSetTop: {
-      type: Number,
-      default: 0
     }
   },
   mounted() {
@@ -46,18 +42,11 @@ export default {
     //2.监听滚动的位置
     if(this.probeType === 2 || this.probeType === 3){
       this.bs.on('scroll', (position) => {
-      //监听是否显示backTop
-      if(-position.y > 1000){
-        this.$emit('scroll',true)
-      }else{
-        this.$emit('scroll',false)
-      }
-      //监听tabcontrol是否吸顶
-      if(-position.y >= this.tabControlOffSetTop) {
-        this.$emit('isTabControlFixed',true)
-      }else{
-        this.$emit('isTabControlFixed',false)
-      }
+        if(this.$route.path.indexOf('/home') !== -1) {
+          this.$emit('homeScroll', position.y)
+        }else if(this.$route.path.indexOf('/detail') !== -1) {
+          this.$emit('detailScroll', position.y)
+        }
       })
     }
     //3.监听下拉滚动
@@ -69,8 +58,8 @@ export default {
     
   },
   methods: {
-    scrollTo(){
-      this.bs && this.bs.scrollTo(0, 0, 500)
+    scrollTo(x, y, duration){
+      this.bs && this.bs.scrollTo(x, y, duration)
     },
     finishPullUp() {
       this.bs.finishPullUp()

@@ -28,6 +28,8 @@ export default {
   methods: {
     navItemClick(index) {
       this.currentIndex = index
+      // console.log(this.moduleHeight[index]
+      this.$emit('navItemClick', index)
     },
     backPage() {
       this.$router.back()

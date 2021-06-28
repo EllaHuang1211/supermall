@@ -4,7 +4,7 @@
       <div slot="center">购物街</div>
     </nav-bar>
     <tab-control :tabTitles="tabTitles"
-      class="tab-control"
+      class="tab-control-top"
       ref="tabControl1"
       @itemClick="tabControlClick"
       v-show="isTabControlFixed">
@@ -13,10 +13,8 @@
      ref="scroll"
      :probeType='probeType'
      :pullUpLoad='pullUpLoad'
-     :tabControlOffSetTop='tabControlOffSetTop'
-     @scroll='backtop'
-     @pullingUp='loadMore'
-     @isTabControlFixed='isTabFixed'>
+     @homeScroll='homeScroll'
+     @pullingUp='loadMore'>
       <home-swiper :banners="banners" class="home-banner" @swiperImgLoad='swiperImgLoad'></home-swiper>
       <recommend-view :recommends="recommends"></recommend-view>
       <this-week-popular></this-week-popular>
@@ -32,6 +30,7 @@
 
 <script>
 import {getHomeMultidata, getHomeGoodsList} from 'network/home.js'
+import {itemImgLoadMixin, backTopMixin} from 'common/mixin.js'
 
 import NavBar from 'components/common/navbar/NavBar.vue'
 import HomeSwiper from './homecomps/HomeSwiper.vue'
@@ -56,13 +55,15 @@ export default {
       },
       currentType: 'pop',
       bs: null,
-      isShowBackTop: false,
+      // isShowBackTop: false,
       probeType: 3,
       pullUpLoad: true,
       tabControlOffSetTop: 0,
-      isTabControlFixed: false
+      isTabControlFixed: false,
+      homeItemImgLoad: null
     }
   },
+  mixins: [itemImgLoadMixin, backTopMixin],
   created(){
     // 网络请求相关
     this.getHomeMultidata()
@@ -70,11 +71,8 @@ export default {
     this.getHomeGoodsList('new')
     this.getHomeGoodsList('sell')
   },
-  mounted() {
-    const refresh = this.debounce(this.$refs.scroll.refresh, 50)
-    this.$bus.$on('itemImgLoad',() => {
-      refresh()
-    })
+  deactivated() {
+    this.$bus.$off('itemImgLoad', this.itemImgLoad)
   },
   methods: {
     tabControlClick(index) {
@@ -101,32 +99,23 @@ export default {
         this.$refs.scroll.finishPullUp()
       })
     },
-    backtop(bool) {
-      this.isShowBackTop = bool
+    homeScroll(y) {
+      //判断是否显示backTop按钮
+      this.setIsShowBackTop(y)
+      // this.isShowBackTop = (-y > 1000)
+      //判断tabControl是否吸顶
+      this.isTabControlFixed = (-y >= this.tabControlOffSetTop)
+
     },
-    backTopClick() {
-      this.$refs.scroll.scrollTo()
-    },
-    //防抖函数
-    debounce(func, delay) {
-      let timer = null
-      return function(...args) {
-        if(timer) {clearTimeout(timer)}
-        timer = setTimeout(() => {
-          // console.log('+++++++++')
-          func.apply(this, args)
-        }, delay)
-      }
-    },
+    // backTopClick() {
+    //   this.$refs.scroll.scrollTo(0, 0, 500)
+    // },
     loadMore() {
       this.getHomeGoodsList(this.currentType)
     },
     swiperImgLoad() {
       // console.log(this.$refs.tabControl2.$el.offsetTop)
       this.tabControlOffSetTop = this.$refs.tabControl2.$el.offsetTop
-    },
-    isTabFixed(bool) {
-      this.isTabControlFixed = bool
     }
   },
   components: {
@@ -151,9 +140,10 @@ export default {
     background-color: var(--color-tint);
     color: #fff;
   }
-  .tab-control {
+  .tab-control-top {
     position: relative;
     z-index: 999;
+    top: -1px;
   }
   .content {
     position: absolute;
