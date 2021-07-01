@@ -94,7 +94,8 @@ export default {
         img: this.topImages[0],
         title: this.goods.title,
         desc: this.goods.desc,
-        price: this.goods.lowNowPrice
+        price: this.goods.realPrice,
+        checked: true
       }
       this.$store.dispatch('addToCart',addGood)
     }

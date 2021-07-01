@@ -1,9 +1,9 @@
 const mutations = {
-  addNum(state, oldGood) {
-    oldGood.num++
+  addCount(state, oldGood) {
+    oldGood.count++
   },
   addNew(state, payload) {
-    payload.num = 1
+    payload.count = 1
     state.cartList.push(payload)
   }
 }

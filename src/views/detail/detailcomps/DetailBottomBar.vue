@@ -42,6 +42,7 @@
     bottom: 0;
     display: flex;
     text-align: center;
+    z-index: 9999;
   }
 
   .bar-item {
