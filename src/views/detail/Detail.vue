@@ -12,6 +12,7 @@
     </scroll>
     <detail-bottom-bar @addToCart='addToCart'></detail-bottom-bar>
     <back-top @click.native="backTopClick" class="back-top-button" v-show="isShowBackTop"></back-top>
+    <toast ref="toast"></toast>
   </div>
 </template>
 
@@ -32,6 +33,8 @@ import GoodsList from 'components/content/goodslist/GoodsList.vue'
 import DetailBottomBar from './detailcomps/DetailBottomBar.vue'
 import BackTop from 'components/content/backtop/BackTop.vue'
 
+import Toast from 'components/common/toast/Toast.vue'
+
 export default {
   name: 'Detail',
   components: {
@@ -45,7 +48,8 @@ export default {
     DetailCommentInfo,
     GoodsList,
     DetailBottomBar,
-    BackTop
+    BackTop,
+    Toast
   },
   data() {
     return {
@@ -98,6 +102,8 @@ export default {
         checked: true
       }
       this.$store.dispatch('addToCart',addGood)
+
+      this.$refs.toast.showToast('商品已添加至购物车', 1000)
     }
   },
   created() {

@@ -32,7 +32,7 @@
 import {getHomeMultidata, getHomeGoodsList} from 'network/home.js'
 import {itemImgLoadMixin, backTopMixin} from 'common/mixin.js'
 
-import NavBar from 'components/common/navbar/NavBar.vue'
+// import NavBar from 'components/common/navbar/NavBar.vue'
 import HomeSwiper from './homecomps/HomeSwiper.vue'
 import RecommendView from './homecomps/RecommendView.vue'
 import ThisWeekPopular from './homecomps/ThisWeekPopular.vue'
@@ -87,6 +87,7 @@ export default {
     getHomeMultidata() {
       getHomeMultidata().then(res => {
       this.banners = res.data.banner.list
+      console.log(this.banners)
       this.recommends = res.data.recommend.list
     })
     },
